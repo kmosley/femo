@@ -2,27 +2,27 @@ package femo.feature;
 
 import femo.exception.InvalidDiscreteValueException;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 public abstract class StringFeature <InputType> extends Feature<InputType> {
 
-    LinkedHashSet<String> validValues;
+    Map<String, Integer> validValuesLookup;
+    ArrayList<String> validValues;
     boolean addValueIfNotPresent;
 
     public StringFeature(String name){
-        this(name, new LinkedHashSet<String>(), true);
+        this(name, new ArrayList<String>(), true);
     }
-    public StringFeature(String name, LinkedHashSet<String> validValues, boolean addValueIfNotPresent){
+    public StringFeature(String name, ArrayList<String> validValues, boolean addValueIfNotPresent){
         super(name);
         this.validValues = validValues;
+        this.validValuesLookup = new HashMap<String, Integer>(validValues.size());
+        for(int i=0; i<validValues.size(); i++)
+            validValuesLookup.put(validValues.get(i), i);
         this.addValueIfNotPresent = addValueIfNotPresent;
     }
     public StringFeature(String name, String[] validValuesArr, boolean addValueIfNotPresent){
-        super(name);
-        this.validValues = new LinkedHashSet<String>(Arrays.asList(validValuesArr));
-        this.addValueIfNotPresent = addValueIfNotPresent;
+        this(name, new ArrayList<String>(Arrays.asList(validValuesArr)), addValueIfNotPresent);
     }
 
     @Override
@@ -39,8 +39,12 @@ public abstract class StringFeature <InputType> extends Feature<InputType> {
         return new FeatureValue(this, value);
     }
 
-    public Set<String> getValidValues(){
+    public ArrayList<String> getValidValues(){
         return validValues;
+    }
+
+    public int getValueIndex(String value){
+        return validValuesLookup.get(value);
     }
 
     protected abstract String getStringValue(InputType inputData) throws Exception;

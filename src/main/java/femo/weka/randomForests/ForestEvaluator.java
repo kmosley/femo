@@ -21,12 +21,12 @@ public class ForestEvaluator {
         ArrayList<Attribute> attributes = ForestBuilder.getPredictorAttributes(trainingSet.getTrainingExamples());
         Attribute classAttribute = new Attribute(
                 trainingSet.getResponseFeature().getName(),
-                new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
+                ((StringFeature)trainingSet.getResponseFeature()).getValidValues());
         attributes.add(classAttribute);
 
         Instances instances = ForestBuilder.createInstancesObject("TestingInstances", trainingSet, attributes, classAttribute);
 
-        ArrayList<String> classNameLookup = new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues());
+        ArrayList<String> classNameLookup = ((StringFeature)trainingSet.getResponseFeature()).getValidValues();
 
         int numTotal = examples.size();
         int numTotalPredicted = 0;

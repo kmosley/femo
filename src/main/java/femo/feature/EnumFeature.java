@@ -9,7 +9,7 @@ public abstract class EnumFeature<K, T extends Enum> extends StringFeature<K> {
     Class<T> clazz;
 
     public EnumFeature(String name, Class<T> clazz){
-        super(name, new LinkedHashSet(EnumUtils.getEnumValues(clazz)), false);
+        super(name, EnumUtils.getEnumValues(clazz), false);
         this.clazz = clazz;
     }
 

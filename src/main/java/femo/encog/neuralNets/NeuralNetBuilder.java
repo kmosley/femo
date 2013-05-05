@@ -1,6 +1,8 @@
 package femo.encog.neuralNets;
 
 import femo.feature.FeatureValue;
+import femo.feature.StringFeature;
+import femo.modeling.Example;
 import femo.modeling.InMemTrainingSet;
 import femo.modeling.TrainingExample;
 import org.encog.mathutil.randomize.ConsistentRandomizer;
@@ -13,15 +15,20 @@ import org.encog.neural.networks.training.propagation.Propagation;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 import org.encog.neural.pattern.FeedForwardPattern;
 
-import java.util.ArrayList;
+import java.util.Random;
 
 public class NeuralNetBuilder {
 
-    public static BasicNetwork createNeuralNet(NeuralNetBuilderConfig config, InMemTrainingSet trainingSet, InMemTrainingSet cvSet) throws Exception {
+    public int randomSeed = new Random().nextInt();
+    public int[] hiddenLayerCounts = new int[]{15, 5};
+    public FemoActivationFunction activationFunction = FemoActivationFunction.TANH;
+    public int secondsToTrain = 30;
+
+    public <DataType, ResponseInput> NeuralNetClassificationModel<DataType> buildModel(InMemTrainingSet<DataType, ResponseInput> trainingSet) throws Exception {
         NeuralNetHelper.validateTrainingSet(trainingSet);
-        BasicNetwork network = createNetwork(config, trainingSet);
-        MLDataSet trainingDataSet = createMLDataSet(trainingSet, config.activationFunction.mean);
-        MLDataSet cvDataSet = createMLDataSet(cvSet, config.activationFunction.mean);
+        BasicNetwork network = createNetwork(trainingSet);
+        MLDataSet trainingDataSet = createMLDataSet(trainingSet, activationFunction.mean);
+        //MLDataSet cvDataSet = createMLDataSet(cvSet, activationFunction.mean);
 
         Propagation trainer = new ResilientPropagation(network, trainingDataSet);
         trainer.setThreadCount(0);
@@ -34,7 +41,7 @@ public class NeuralNetBuilder {
 
             final long current = System.currentTimeMillis();
             final long elapsed = (current - start) / 1000;// seconds
-            remaining = config.secondsToTrain - elapsed;
+            remaining = secondsToTrain - elapsed;
 
             int iteration = trainer.getIteration();
 
@@ -43,48 +50,57 @@ public class NeuralNetBuilder {
 //                    + " elapsed time = " + Format.formatTimeSpan((int) elapsed)
 //                    + " time left = "
 //                    + Format.formatTimeSpan((int) remaining));
-            if(iteration % 300 == 0)
-                System.out.println("CV Error: "+network.calculateError(cvDataSet)+" iteration "+iteration);
+            //if(iteration % 300 == 0)
+            //    System.out.println("CV Error: "+network.calculateError(cvDataSet)+" iteration "+iteration);
 
         } while (remaining > 0);
 
-        return network;
+        NeuralNetClassificationModel<DataType> model = new NeuralNetClassificationModel<DataType>(trainingSet.getPredictorFeatures(), network, ((StringFeature)trainingSet.getResponseFeature()).getValidValues());
+
+        return model;
     }
 
-    protected static BasicNetwork createNetwork(NeuralNetBuilderConfig config, InMemTrainingSet trainingSet) throws Exception {
+    protected <DataType, ResponseInput> BasicNetwork createNetwork(InMemTrainingSet<DataType, ResponseInput> trainingSet) throws Exception {
         final FeedForwardPattern pattern = new FeedForwardPattern();
-        pattern.setInputNeurons(((TrainingExample) trainingSet.getTrainingExamples().get(0)).getPredictorFeatureValues().size());
+        pattern.setInputNeurons((trainingSet.getTrainingExamples().get(0)).getPredictorFeatureValues().size());
         pattern.setOutputNeurons(1);
-        pattern.setActivationFunction(config.activationFunction.activationFunction);
+        pattern.setActivationFunction(activationFunction);
 
-        for (int hiddenLayerCount : config.hiddenLayerCounts) {
+        for (int hiddenLayerCount : hiddenLayerCounts) {
             if (hiddenLayerCount != 0)
                 pattern.addHiddenLayer(hiddenLayerCount);
         }
 
         BasicNetwork network = (BasicNetwork)pattern.generate();
         network.reset();
-        new ConsistentRandomizer(-1,1,config.randomSeed).randomize(network);
+        new ConsistentRandomizer(-1,1,randomSeed).randomize(network);
 
         return network;
     }
 
-    protected static MLDataSet createMLDataSet(InMemTrainingSet trainingSet, double activationFunctionMean) throws Exception {
-        int inputSize = ((TrainingExample)trainingSet.getTrainingExamples().get(0)).getPredictorFeatureValues().size();
+    protected static <DataType, ResponseInput> MLDataSet createMLDataSet(InMemTrainingSet<DataType, ResponseInput> trainingSet, double activationFunctionMean) throws Exception {
         MLDataSet dataSet = new BasicMLDataSet();
-        for(TrainingExample example : (ArrayList<TrainingExample>)trainingSet.getTrainingExamples()){
-            MLData inputData = new BasicMLData(inputSize);
-            // keyset should be ordered since we're using a LinkedHashMap
-            int dataInd=0;
-            for(FeatureValue featureValue : example.getPredictorFeatureValues()){
-                if(featureValue.getValue() == null)
-                    inputData.setData(dataInd++, activationFunctionMean);
-                else
-                    inputData.setData(dataInd++, (Double)featureValue.getValue());
-            }
-            dataSet.add(inputData, new BasicMLData(new double[]{(Double)example.responseFeatureValue.getValue()}));
+        for(TrainingExample example : trainingSet.getTrainingExamples()){
+            MLData inputData = createMLData(example, activationFunctionMean);
+            if(example.responseFeatureValue.getValue() instanceof Double)
+                dataSet.add(inputData, new BasicMLData(new double[]{(Double) example.responseFeatureValue.getValue()}));
+            if(example.responseFeatureValue.getValue() instanceof String)
+                dataSet.add(inputData, new BasicMLData(new double[]{((StringFeature) trainingSet.getResponseFeature()).getValueIndex((String)example.responseFeatureValue.getValue())}));
         }
         return dataSet;
+    }
+
+    protected static MLData createMLData(Example example, double activationFunctionMean) throws Exception {
+        MLData inputData = new BasicMLData(example.getPredictorFeatureValues().size());
+        // keyset should be ordered
+        int dataInd=0;
+        for(FeatureValue featureValue : example.getPredictorFeatureValues()){
+            if(featureValue.getValue() == null)
+                inputData.setData(dataInd++, activationFunctionMean);
+            else
+                inputData.setData(dataInd++, (Double)featureValue.getValue());
+        }
+        return inputData;
     }
 
 //    public void trainNetworkAdditionalEpochs(Propagation trainer, int epochsToTrain) throws SQLException, IOException, ClassNotFoundException {

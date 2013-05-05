@@ -19,13 +19,13 @@ public class ForestBuilder {
 
     // the ResponseType generic doesn't need to be there but I'm not sure how to get the DataType from the training set without it
     // include response feature so we can map the forest outputs to the correct string values
-    public <DataType, ResponseType> ForestModel<DataType> buildModel(InMemTrainingSet<DataType, ResponseType> trainingSet, StringFeature responseFeature) throws Exception {
+    public <DataType, ResponseType> ForestModel<DataType> buildModel(InMemTrainingSet<DataType, ResponseType> trainingSet) throws Exception {
         ForestHelper.validateTrainingSet(trainingSet);
 
         ArrayList<Attribute> attributes = getPredictorAttributes(trainingSet.getTrainingExamples());
         Attribute classAttribute = new Attribute(
                 trainingSet.getResponseFeature().getName(),
-                new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
+                ((StringFeature)trainingSet.getResponseFeature()).getValidValues());
         attributes.add(classAttribute);
 
         Instances trainingInstances = createInstancesObject("TrainingInstances", trainingSet, attributes, classAttribute);
