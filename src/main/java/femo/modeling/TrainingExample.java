@@ -5,13 +5,11 @@ import femo.feature.FeatureValue;
 
 import java.util.HashMap;
 
+//TODO: maybe use composition instead of inheritance here
 public class TrainingExample extends Example {
-    public final HashMap<String, Object> metaData;
     public FeatureValue responseFeatureValue;
 
     public TrainingExample(Example example, FeatureValue responseFeatureValue) throws InvalidFeatureValueException {
-        metaData = new HashMap<String, Object>();
-        this.type = example.type;
         this.predictorFeatureValues = example.predictorFeatureValues;
         this.valueLookup = example.valueLookup;
         this.responseFeatureValue = responseFeatureValue;

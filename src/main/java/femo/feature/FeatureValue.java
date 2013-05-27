@@ -3,9 +3,9 @@ package femo.feature;
 public class FeatureValue <ValueType> {
 
     //TODO: feature shouldn't actually be here, can be misleading if the value was normalized to a different type, keeping for debugging
-    final private Feature feature;
-    final String name;
-    final ValueType value;
+    final protected Feature feature;
+    final protected String name;
+    final protected ValueType value;
 
     public FeatureValue(Feature feature, ValueType value){
         this(feature, feature.getName(), value);

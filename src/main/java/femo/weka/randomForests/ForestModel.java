@@ -2,6 +2,7 @@ package femo.weka.randomForests;
 
 import femo.feature.FeatureSet;
 import femo.modeling.Example;
+import femo.modeling.ExampleDensity;
 import femo.modeling.Model;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;

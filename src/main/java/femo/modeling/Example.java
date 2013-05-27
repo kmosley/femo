@@ -7,16 +7,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Example {
-    protected ExampleValuesType type;
     protected ArrayList<FeatureValue> predictorFeatureValues;
     protected HashMap<String, FeatureValue> valueLookup;
 
     public Example(){
-        this(ExampleValuesType.Dense);
-    }
-
-    public Example(ExampleValuesType type){
-        this.type = type;
         predictorFeatureValues = new ArrayList<FeatureValue>();
         valueLookup = new HashMap<String, FeatureValue>();
     }
@@ -42,10 +36,5 @@ public class Example {
             sb.append(featureValue.toString());
         }
         return sb.toString();
-    }
-
-    static enum ExampleValuesType{
-        Dense,
-        Sparse
     }
 }

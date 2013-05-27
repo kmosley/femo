@@ -20,7 +20,7 @@ public class InMemTrainingSet<FeatureSetInput, ResponseFeatureInput> extends Tra
 
         trainingExamples = new ArrayList<TrainingExample>(instanceData.size());
         for(int i=0; i<instanceData.size(); i++){
-            trainingExamples.add(new TrainingExample(predictorFeatures.getFeatureValues(instanceData.get(i)), responseFeature.getFeatureValue(responseData.get(i))));
+            trainingExamples.add(new TrainingExample(predictorFeatures.getExample(instanceData.get(i)), responseFeature.getFeatureValue(responseData.get(i))));
         }
     }
     public InMemTrainingSet(FeatureSet<FeatureSetInput> predictorFeatures, Feature<ResponseFeatureInput> responseFeature, ArrayList<TrainingExample> trainingExamples) throws Exception {
