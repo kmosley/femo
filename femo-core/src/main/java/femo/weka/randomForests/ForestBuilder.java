@@ -10,25 +10,29 @@ import weka.core.Instance;
 
 import java.util.*;
 
-public class ForestBuilder {
+public class ForestBuilder implements ModelBuilder<ForestModel>{
 
     public int randomSeed = new Random().nextInt();
     public int numTrees = 50;
     public int numSelectionAttributes = 10;
     public int numThreadsToUse = 4;
 
-    // the ResponseType generic doesn't need to be there but I'm not sure how to get the DataType from the training set without it
-    // include response feature so we can map the forest outputs to the correct string values
-    public <DataType, ResponseType> ForestModel<DataType> buildModel(InMemTrainingSet<DataType, ResponseType> trainingSet) throws Exception {
-        ForestHelper.validateTrainingSet(trainingSet);
+    @Override
+    public <DataType, ResponseDataType> ForestModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception {
 
-        ArrayList<Attribute> attributes = getPredictorAttributes(trainingSet.getTrainingExamples());
+        if(!(trainingSet.getResponseFeature() instanceof StringFeature)){
+            throw new InvalidFeatureValueException("response feature for trees must return string values: "+trainingSet.getResponseFeature().getName());
+        }
+
+        List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
+
+        ArrayList<Attribute> attributes = getPredictorAttributes(trainingExamples);
         Attribute classAttribute = new Attribute(
                 trainingSet.getResponseFeature().getName(),
                 ((StringFeature)trainingSet.getResponseFeature()).getValidValues());
         attributes.add(classAttribute);
 
-        Instances trainingInstances = createInstancesObject("TrainingInstances", trainingSet, attributes, classAttribute);
+        Instances trainingInstances = createInstancesObject("TrainingInstances", trainingExamples, attributes, classAttribute);
 
         // configure forest
         RandomForest forest = new RandomForest();
@@ -42,18 +46,16 @@ public class ForestBuilder {
 
         forest.buildClassifier(trainingInstances);
 
-        ForestModel<DataType> model = new ForestModel<DataType>(trainingSet.getPredictorFeatures(), forest, attributes, classAttribute, new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
+        ForestModel<DataType> model = new ForestModel<DataType>(trainingSet.getFeatureSet(), forest, attributes, classAttribute, new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
 
         return model;
     }
 
-    protected static Instances createInstancesObject(String name, InMemTrainingSet trainingSet, ArrayList<Attribute> attributes, Attribute classAttribute) throws Exception {
-        ArrayList<TrainingExample> examples = trainingSet.getTrainingExamples();
-
-        Instances instances = new Instances(name, attributes, examples.size());
+    protected static Instances createInstancesObject(String name, List<TrainingExample> trainingExamples, ArrayList<Attribute> attributes, Attribute classAttribute) throws Exception {
+        Instances instances = new Instances(name, attributes, trainingExamples.size());
         instances.setClass(classAttribute);
 
-        for(TrainingExample example : examples){
+        for(TrainingExample example : trainingExamples){
             Instance instance = createInstance(instances, example);
             if(instance != null)
                 instances.add(instance);
@@ -86,7 +88,7 @@ public class ForestBuilder {
         return instance;
     }
 
-    protected static ArrayList<Attribute> getPredictorAttributes(ArrayList<TrainingExample> examples){
+    protected static ArrayList<Attribute> getPredictorAttributes(List<TrainingExample> examples){
         // initialize with first example's size even though that's not guaranteed to be max
         // it is guaranteed to be max if we are returning null feature values for all missing features
         ArrayList<Attribute> attributes = new ArrayList<Attribute>(examples.get(0).getPredictorFeatureValues().size());

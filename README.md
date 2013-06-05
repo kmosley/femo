@@ -2,13 +2,16 @@ FeMo
 =============
 FeMo (FeatureModeling) is an API for Java machine learning hobbyists to experiment with different learning algorithms.
 The purpose of this project is to separate extracting features from a data object from running a learning algorithm.
-This way, if you want to compare two different random forest implementations you just need to write a Model builder for each
+This way, if you want to compare two different random forest implementations you just need to write a ModelBuilder for each
 implementation which knows how to handle different feature values and you can pass the same set of Examples to each implementation.
 
 ##Notable Classes
 
 ###Example
 A holder for the predictor features of a single data object, sometimes called instances or independent variables.
+
+###ModelBuilder
+Contains the logic to train a model based on a specific learning method. These you can either tie into existing frameworks, Weka Random Forests for example, or implement your own training method if you're feeling particularly randy.
 
 ###Model
 Abstract class to hold a trained model for a specific learning method whose generic input type is tied to a specific data object. This object can be serialized and used later for prediction.

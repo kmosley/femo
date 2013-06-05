@@ -4,20 +4,18 @@ import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 
-public final class FeatureSet <DataType> implements FeatureSetInterface<DataType>, Serializable {
+public final class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializable {
 
-    protected ArrayList<Feature<DataType>> predictorFeatures = new ArrayList<Feature<DataType>>();
-    protected ExampleDensity density;
+    protected final List<? extends Feature<DataType>> predictorFeatures;
 
-    protected FeatureSet(ArrayList<Feature<DataType>> predictorFeatures, ExampleDensity density){
+    public FeatureSet(List<? extends Feature<DataType>> predictorFeatures){
         this.predictorFeatures = predictorFeatures;
-        this.density = density;
     }
 
     @Override
-    public Example getExample(DataType dataObject) throws Exception {
+    public Example getExample(DataType dataObject, ExampleDensity density) throws Exception {
         if(density == ExampleDensity.Dense)
             return getDenseExample(dataObject);
         return getSparseExample(dataObject);

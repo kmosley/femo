@@ -2,6 +2,7 @@ package femo.encog.neuralNets;
 
 import femo.feature.FeatureSet;
 import femo.modeling.Example;
+import femo.modeling.ExampleDensity;
 import femo.modeling.Model;
 import org.encog.ml.data.MLData;
 import org.encog.neural.networks.BasicNetwork;
@@ -19,7 +20,8 @@ public class NeuralNetClassificationModel<DataType> extends Model<DataType, Neur
     }
 
     @Override
-    protected NeuralNetClassificationPrediction getPrediction(Example example) throws Exception {
+    public NeuralNetClassificationPrediction getPrediction(DataType dataObject) throws Exception {
+        Example example = featureSet.getExample(dataObject, ExampleDensity.Sparse);
         //TODO: confirm it grabs correct activation function
         MLData mlData = NeuralNetBuilder.createMLData(example, ((FemoActivationFunction)network.getActivation(network.getLayerCount()-1)).mean);
 

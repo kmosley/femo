@@ -11,11 +11,4 @@ public abstract class Model <DataType, PredictionType extends Prediction> implem
     protected Model(FeatureSet<DataType> featureSet){
         this.featureSet = featureSet;
     }
-
-    @Override
-    public PredictionType getPrediction(DataType dataObj) throws Exception {
-        return getPrediction(featureSet.getExample(dataObj));
-    }
-
-    protected abstract PredictionType getPrediction(Example example) throws Exception;
 }

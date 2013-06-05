@@ -28,7 +28,8 @@ public class ForestModel<DataType> extends Model<DataType, ForestPrediction> {
     }
 
     @Override
-    protected ForestPrediction getPrediction(Example example) throws Exception {
+    public ForestPrediction getPrediction(DataType dataObject) throws Exception {
+        Example example = featureSet.getExample(dataObject, ExampleDensity.Sparse);
         Instance instance = ForestBuilder.createInstance(instances, example);
 
         int predictedClassValue = (int)Math.round(forest.classifyInstance(instance));

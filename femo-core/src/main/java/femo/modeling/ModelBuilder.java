@@ -1,7 +1,15 @@
 package femo.modeling;
 
-public abstract class ModelBuilder {
+import femo.exception.InvalidFeatureValueException;
+import femo.feature.Feature;
+import femo.feature.FeatureSet;
+import femo.feature.FeatureValue;
+import femo.prediction.Prediction;
 
-    public abstract Model buildModel(TrainingSet trainingSet);
+import java.util.Iterator;
+
+public interface ModelBuilder <ModelType extends IModel> {
+
+    public <DataType, ResponseDataType> IModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception;
 
 }

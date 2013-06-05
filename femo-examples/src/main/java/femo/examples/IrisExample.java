@@ -3,10 +3,8 @@ package femo.examples;
 import femo.encog.neuralNets.NeuralNetBuilder;
 import femo.encog.neuralNets.NeuralNetClassificationModel;
 import femo.feature.*;
-import femo.modeling.Example;
-import femo.modeling.ExampleDensity;
-import femo.modeling.InMemTrainingSet;
 import femo.modeling.Model;
+import femo.modeling.TrainingSet;
 import femo.prediction.Prediction;
 import femo.utils.ListUtils;
 import femo.weka.randomForests.ForestBuilder;
@@ -30,50 +28,16 @@ public class IrisExample {
         ArrayList<IrisData> train = datasets.get(0);
         ArrayList<IrisData> test = datasets.get(1);
 
-        FeatureSetBuilder<IrisData> featureSetBuilder = new FeatureSetBuilder<IrisData>()
-                .addFeatures(IrisFeatures.irisLengths);
-        FeatureSet<IrisData> denseFeatureSet = featureSetBuilder.setExampleDensity(ExampleDensity.Dense).build();
-        FeatureSet<IrisData> sparseFeatureSet = featureSetBuilder.setExampleDensity(ExampleDensity.Sparse).build();
+        FeatureSet<IrisData> featureSet = new FeatureSet<IrisData>(IrisFeatures.irisLengths);
 
-        InMemTrainingSet<IrisData,IrisData> trainingSet = new InMemTrainingSet<IrisData,IrisData>(sparseFeatureSet, IrisFeatures.irisType, train, train);
-
-        //TODO: get rid of training set idea, builder takes a featureset, DataType example iterator, and response iterator
-        // builder is then in charge of dictating example density
+        TrainingSet<IrisData,IrisData> trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
 
         ForestModel<IrisData> forestModel = new ForestBuilder().buildModel(trainingSet);
         testPredictions(forestModel, test, IrisFeatures.irisType);
-//        NeuralNetClassificationModel<IrisData> neuralNetModel = new NeuralNetBuilder().buildModel(trainingSet);
-//        testPredictions(neuralNetModel, test, responseFeature);
+        trainingSet.resetIterators(train.iterator(), train.iterator());
+        NeuralNetClassificationModel<IrisData> neuralNetModel = new NeuralNetBuilder().setSecondsToTrain(10).buildModel(trainingSet);
+        testPredictions(neuralNetModel, test, IrisFeatures.irisType);
 
-    }
-
-    static void testPredictions(Model<IrisData, ? extends Prediction<String>> model, List<IrisData> test, StringFeature<IrisData> responseFeature) throws Exception {
-        System.out.println("Testing: "+model.getClass());
-        int wrong=0;
-        int correct=0;
-        for(IrisData testData : test){
-            if(model.getPrediction(testData).getValue().equals(responseFeature.getFeatureValue(testData).getValue()))
-                correct++;
-            else
-                wrong++;
-        }
-        System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
-
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("irisModel.model"));
-        oos.writeObject(model);
-        oos.close();
-        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("irisModel.model"));
-        Model<IrisData, ? extends Prediction<String>> serializedModel = (Model<IrisData, ? extends Prediction<String>>)ois.readObject();
-        ois.close();
-        wrong=0;
-        correct=0;
-        for(IrisData testData : test){
-            if(serializedModel.getPrediction(testData).getValue().equals(responseFeature.getFeatureValue(testData).getValue()))
-                correct++;
-            else
-                wrong++;
-        }
-        System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
     }
 
     static class IrisFeatures{
@@ -112,5 +76,35 @@ public class IrisExample {
             }
             type = data[4];
         }
+    }
+
+
+    static void testPredictions(Model<IrisData, ? extends Prediction<String>> model, List<IrisData> test, StringFeature<IrisData> responseFeature) throws Exception {
+        System.out.println("Testing: "+model.getClass());
+        int wrong=0;
+        int correct=0;
+        for(IrisData testData : test){
+            if(model.getPrediction(testData).getValue().equals(responseFeature.getFeatureValue(testData).getValue()))
+                correct++;
+            else
+                wrong++;
+        }
+        System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
+
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("irisModel.model"));
+        oos.writeObject(model);
+        oos.close();
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("irisModel.model"));
+        Model<IrisData, ? extends Prediction<String>> serializedModel = (Model<IrisData, ? extends Prediction<String>>)ois.readObject();
+        ois.close();
+        wrong=0;
+        correct=0;
+        for(IrisData testData : test){
+            if(serializedModel.getPrediction(testData).getValue().equals(responseFeature.getFeatureValue(testData).getValue()))
+                correct++;
+            else
+                wrong++;
+        }
+        System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
     }
 }
