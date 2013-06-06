@@ -1,7 +1,6 @@
 package femo.encog.neuralNets;
 
 import femo.exception.InvalidFeatureValueException;
-import femo.feature.DoubleFeature;
 import femo.feature.Feature;
 import femo.feature.FeatureValue;
 import femo.feature.StringFeature;

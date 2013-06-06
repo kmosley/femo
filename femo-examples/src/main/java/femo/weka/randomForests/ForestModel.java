@@ -9,7 +9,6 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
