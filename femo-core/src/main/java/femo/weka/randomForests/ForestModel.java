@@ -12,6 +12,11 @@ import weka.core.Instances;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Model implementation for a WEKA Random Forest
+ *
+ * @param <DataType> the class of data object which the features can extract values from
+ */
 public class ForestModel<DataType> extends Model<DataType, ForestPrediction> {
     protected RandomForest forest;
     protected ArrayList<String> classNameLookup;

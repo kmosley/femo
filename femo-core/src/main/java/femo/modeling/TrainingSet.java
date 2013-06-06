@@ -7,6 +7,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * A convenience class for the model builders which holds the predictor and response features as well as iterators
+ * for the data objects. Iterators can be used to stream examples from large files or just load all examples into
+ * memory.
+ *
+ * @param <DataType> the class of data object which the features can extract values from
+ * @param <ResponseDataType> the class of data object for the response feature to extract it's value from
+ */
 public class TrainingSet <DataType, ResponseDataType> {
     protected final FeatureSet<DataType> featureSet;
     protected Iterator<DataType> dataObjectsIterator;

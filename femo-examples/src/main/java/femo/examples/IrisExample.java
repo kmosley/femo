@@ -15,10 +15,19 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Example application which shows how to:
+ * create Features for your data object
+ * create a FeatureSet from those Features
+ * create a TrainingSet for holding example data and the target value
+ * use model builders to create a weka random forest and an encog neural network using the same Features
+ * serialize models then deserialize and check the performance is the same
+ */
 public class IrisExample {
 
     public static void main(String[] args) throws Exception {
 
+        // Setup data objects and split into a training set and test set
         BufferedReader br = new BufferedReader(new InputStreamReader(IrisExample.class.getResourceAsStream("iris.data")));
         ArrayList<IrisData> irisData = new ArrayList<IrisData>();
         while(br.ready()){
@@ -29,7 +38,7 @@ public class IrisExample {
         ArrayList<IrisData> train = datasets.get(0);
         ArrayList<IrisData> test = datasets.get(1);
 
-        // Create a random forest model
+        // Create a WEKA random forest model
         FeatureSet<IrisData> featureSet = new FeatureSet<IrisData>(IrisFeatures.irisLengths);
         TrainingSet<IrisData,IrisData> trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
 
@@ -39,11 +48,14 @@ public class IrisExample {
                 .buildModel(trainingSet);
         testPredictions(forestModel, test, IrisFeatures.irisType);
 
-        // Create a neural network model
+        // Create an Encog neural network model
         NeuralNetBuilder builder = new NeuralNetBuilder()
                 .setHiddenLayerCounts(new int[]{})
-                .setSecondsToTrain(1);
-        featureSet = new FeatureSet<IrisData>(NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator()));
+                .setRandomSeed(1)
+                .setSecondsToTrain(2);
+        // normalizing inputs to neural network helps it train faster
+        List<Feature<IrisData>> normalizedFeatures = NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator());
+        featureSet = new FeatureSet<IrisData>(normalizedFeatures);
         trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
 
         NeuralNetClassificationModel<IrisData> neuralNetModel = builder.buildModel(trainingSet);

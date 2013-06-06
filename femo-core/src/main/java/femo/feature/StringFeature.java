@@ -26,8 +26,8 @@ public abstract class StringFeature <InputType> extends Feature<InputType> {
     }
 
     @Override
-    public FeatureValue<String> getFeatureValue(InputType inputData) throws Exception {
-        String value = getStringValue(inputData);
+    public FeatureValue<String> getFeatureValue(InputType dataObject) throws Exception {
+        String value = getStringValue(dataObject);
         if (value == null)
             return new FeatureValue(this, null);
         if(!validValues.contains(value)){

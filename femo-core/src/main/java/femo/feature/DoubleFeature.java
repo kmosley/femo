@@ -6,8 +6,8 @@ public abstract class DoubleFeature <InputType> extends Feature<InputType> {
     }
 
     @Override
-    public FeatureValue<Double> getFeatureValue(InputType inputData) throws Exception {
-        Double val = getDoubleValue(inputData);
+    public FeatureValue<Double> getFeatureValue(InputType dataObject) throws Exception {
+        Double val = getDoubleValue(dataObject);
         return new FeatureValue(this, val);
     }
 
