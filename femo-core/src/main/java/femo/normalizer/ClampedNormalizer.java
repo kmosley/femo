@@ -24,14 +24,11 @@ public class ClampedNormalizer extends Normalizer<Double, Double> implements Ser
     double normalLow;
     double normalHigh;
 
-    NormalizedField normalizer;
-
     public ClampedNormalizer (double clampLow, double clampHigh, double normalLow, double normalHigh){
         this.clampLow = clampLow;
         this.clampHigh = clampHigh;
         this.normalLow = normalLow;
         this.normalHigh = normalHigh;
-        normalizer = new NormalizedField(NormalizationAction.Normalize,null,clampHigh,clampLow,normalHigh,normalLow);
     }
 
     @Override
@@ -40,6 +37,8 @@ public class ClampedNormalizer extends Normalizer<Double, Double> implements Ser
             d = clampHigh;
         else if (d < clampLow)
             d = clampLow;
-        return normalizer.normalize(d);
+        return ((d - clampLow) / (clampHigh - clampLow))
+                * (normalHigh - normalLow)
+                + normalLow;
     }
 }

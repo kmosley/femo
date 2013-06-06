@@ -2,6 +2,7 @@ package femo.examples;
 
 import femo.encog.neuralNets.NeuralNetBuilder;
 import femo.encog.neuralNets.NeuralNetClassificationModel;
+import femo.encog.neuralNets.NeuralNetHelper;
 import femo.feature.*;
 import femo.modeling.Model;
 import femo.modeling.TrainingSet;
@@ -28,14 +29,24 @@ public class IrisExample {
         ArrayList<IrisData> train = datasets.get(0);
         ArrayList<IrisData> test = datasets.get(1);
 
+        // Create a random forest model
         FeatureSet<IrisData> featureSet = new FeatureSet<IrisData>(IrisFeatures.irisLengths);
-
         TrainingSet<IrisData,IrisData> trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
 
-        ForestModel<IrisData> forestModel = new ForestBuilder().buildModel(trainingSet);
+        ForestModel<IrisData> forestModel = new ForestBuilder()
+                .setNumSelectionAttributes(2)
+                .setNumTrees(100)
+                .buildModel(trainingSet);
         testPredictions(forestModel, test, IrisFeatures.irisType);
-        trainingSet.resetIterators(train.iterator(), train.iterator());
-        NeuralNetClassificationModel<IrisData> neuralNetModel = new NeuralNetBuilder().setSecondsToTrain(10).buildModel(trainingSet);
+
+        // Create a neural network model
+        NeuralNetBuilder builder = new NeuralNetBuilder()
+                .setHiddenLayerCounts(new int[]{})
+                .setSecondsToTrain(1);
+        featureSet = new FeatureSet<IrisData>(NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator()));
+        trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
+
+        NeuralNetClassificationModel<IrisData> neuralNetModel = builder.buildModel(trainingSet);
         testPredictions(neuralNetModel, test, IrisFeatures.irisType);
 
     }

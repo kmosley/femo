@@ -2,7 +2,9 @@ package femo.normalizer;
 
 import femo.feature.FeatureValue;
 
-public abstract class Normalizer<InputType, OutputType> {
+import java.io.Serializable;
+
+public abstract class Normalizer<InputType, OutputType> implements Serializable {
     public abstract OutputType normalize(InputType input);
 
     public FeatureValue<OutputType> normalize(FeatureValue<InputType> featureValue) {

@@ -12,10 +12,10 @@ import java.util.*;
 
 public class ForestBuilder implements ModelBuilder<ForestModel>{
 
-    public int randomSeed = new Random().nextInt();
-    public int numTrees = 50;
-    public int numSelectionAttributes = 10;
-    public int numThreadsToUse = 4;
+    protected int randomSeed = new Random().nextInt();
+    protected int numTrees = 50;
+    protected int numSelectionAttributes = 10;
+    protected int numThreadsToUse = 4;
 
     @Override
     public <DataType, ResponseDataType> ForestModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception {
@@ -105,5 +105,25 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
         }
 
         return attributes;
+    }
+
+    public ForestBuilder setRandomSeed(int randomSeed) {
+        this.randomSeed = randomSeed;
+        return this;
+    }
+
+    public ForestBuilder setNumTrees(int numTrees) {
+        this.numTrees = numTrees;
+        return this;
+    }
+
+    public ForestBuilder setNumSelectionAttributes(int numSelectionAttributes) {
+        this.numSelectionAttributes = numSelectionAttributes;
+        return this;
+    }
+
+    public ForestBuilder setNumThreadsToUse(int numThreadsToUse) {
+        this.numThreadsToUse = numThreadsToUse;
+        return this;
     }
 }

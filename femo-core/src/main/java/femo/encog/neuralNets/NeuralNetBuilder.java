@@ -16,6 +16,7 @@ import org.encog.neural.networks.training.propagation.Propagation;
 import org.encog.neural.networks.training.propagation.resilient.ResilientPropagation;
 import org.encog.neural.pattern.FeedForwardPattern;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -29,16 +30,20 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
     @Override
     public <DataType, ResponseDataType> NeuralNetClassificationModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception {
 
+        if(!(trainingSet.getResponseFeature() instanceof StringFeature)){
+            throw new InvalidFeatureValueException("response feature for classification neural nets must return string values: "+trainingSet.getResponseFeature().getName());
+        }
+
         List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Dense);
 
-        BasicNetwork network = createNetwork(trainingExamples);
-        MLDataSet trainingDataSet = createMLDataSet(trainingExamples, trainingSet.getResponseFeature(), activationFunction.mean);
+        BasicNetwork network = createNetwork(trainingExamples, (StringFeature)trainingSet.getResponseFeature());
+        MLDataSet trainingDataSet = createMLDataSet(trainingExamples, trainingSet.getResponseFeature(), activationFunction);
         //MLDataSet cvDataSet = createMLDataSet(cvSet, activationFunction.mean);
 
         Propagation trainer = new ResilientPropagation(network, trainingDataSet);
         trainer.setThreadCount(0);
 
-        System.out.println("Beginning training...");
+        System.out.println("Beginning neural network training...");
         long remaining;
         final long start = System.currentTimeMillis();
         do {
@@ -65,10 +70,10 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
         return model;
     }
 
-    protected <DataType, ResponseInput> BasicNetwork createNetwork(List<TrainingExample> trainingExamples) throws Exception {
+    protected <DataType, ResponseInput> BasicNetwork createNetwork(List<TrainingExample> trainingExamples, StringFeature responseFeature) throws Exception {
         final FeedForwardPattern pattern = new FeedForwardPattern();
         pattern.setInputNeurons((trainingExamples.get(0)).getPredictorFeatureValues().size());
-        pattern.setOutputNeurons(1);
+        pattern.setOutputNeurons(responseFeature.getValidValues().size());
         pattern.setActivationFunction(activationFunction);
 
         for (int hiddenLayerCount : hiddenLayerCounts) {
@@ -83,14 +88,20 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
         return network;
     }
 
-    protected static <DataType, ResponseInput> MLDataSet createMLDataSet(List<TrainingExample> trainingExamples, Feature responseFeature, double activationFunctionMean) throws Exception {
+    protected static <DataType, ResponseInput> MLDataSet createMLDataSet(List<TrainingExample> trainingExamples, Feature responseFeature, FemoActivationFunction activationFunction) throws Exception {
         MLDataSet dataSet = new BasicMLDataSet();
         for(TrainingExample example : trainingExamples){
-            MLData inputData = createMLData(example, activationFunctionMean);
-            if(example.responseFeatureValue.getValue() instanceof Double)
-                dataSet.add(inputData, new BasicMLData(new double[]{(Double) example.responseFeatureValue.getValue()}));
-            if(example.responseFeatureValue.getValue() instanceof String)
-                dataSet.add(inputData, new BasicMLData(new double[]{((StringFeature) responseFeature).getValueIndex((String)example.responseFeatureValue.getValue())}));
+            MLData inputData = createMLData(example, activationFunction.mean);
+//            if(example.responseFeatureValue.getValue() instanceof Double)
+//                dataSet.add(inputData, new BasicMLData(new double[]{(Double) example.responseFeatureValue.getValue()}));
+            if(responseFeature instanceof StringFeature){
+                StringFeature strResponseFeature = (StringFeature)responseFeature;
+                int outputIndex = strResponseFeature.getValueIndex((String) example.responseFeatureValue.getValue());
+                double[] output = new double[strResponseFeature.getValidValues().size()];
+                Arrays.fill(output, activationFunction.min);
+                output[outputIndex] = activationFunction.max;
+                dataSet.add(inputData, new BasicMLData(output));
+            }
         }
         return dataSet;
     }
@@ -128,6 +139,21 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
         return this;
     }
 
+    public int getRandomSeed() {
+        return randomSeed;
+    }
+
+    public int[] getHiddenLayerCounts() {
+        return hiddenLayerCounts;
+    }
+
+    public FemoActivationFunction getActivationFunction() {
+        return activationFunction;
+    }
+
+    public int getSecondsToTrain() {
+        return secondsToTrain;
+    }
     //    public void trainNetworkAdditionalEpochs(Propagation trainer, int epochsToTrain) throws SQLException, IOException, ClassNotFoundException {
 //        int startEpoch = trainer.getIteration();
 //
