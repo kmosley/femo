@@ -4,14 +4,19 @@ import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
-public final class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializable {
+public class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializable {
 
     protected final List<? extends Feature<DataType>> predictorFeatures;
 
     public FeatureSet(List<? extends Feature<DataType>> predictorFeatures){
         this.predictorFeatures = predictorFeatures;
+    }
+
+    public FeatureSet(Feature<DataType> ... predictorFeatures){
+        this.predictorFeatures = Arrays.asList(predictorFeatures);
     }
 
     @Override

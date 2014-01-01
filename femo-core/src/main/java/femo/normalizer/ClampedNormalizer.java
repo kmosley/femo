@@ -1,8 +1,5 @@
 package femo.normalizer;
 
-import org.encog.util.arrayutil.NormalizationAction;
-import org.encog.util.arrayutil.NormalizedField;
-
 import java.io.Serializable;
 
 /*

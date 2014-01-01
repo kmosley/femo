@@ -2,24 +2,22 @@ package femo.feature;
 
 import femo.utils.EnumUtils;
 
-import java.util.LinkedHashSet;
+public abstract class EnumFeature<DataType, EnumType extends Enum> extends StringFeature<DataType> {
 
-public abstract class EnumFeature<K, T extends Enum> extends StringFeature<K> {
+    Class<EnumType> clazz;
 
-    Class<T> clazz;
-
-    public EnumFeature(String name, Class<T> clazz){
+    public EnumFeature(String name, Class<EnumType> clazz){
         super(name, EnumUtils.getEnumValues(clazz), false);
         this.clazz = clazz;
     }
 
     @Override
-    protected String getStringValue(K example) throws Exception {
-        T enumVal = getEnumValue(example);
+    protected String getStringValue(DataType example) throws Exception {
+        EnumType enumVal = getEnumValue(example);
         if (enumVal == null)
             return null;
         return enumVal.toString();
     }
 
-    public abstract T getEnumValue(K example) throws Exception;
+    public abstract EnumType getEnumValue(DataType example) throws Exception;
 }
