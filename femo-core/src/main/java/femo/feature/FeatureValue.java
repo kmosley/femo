@@ -2,7 +2,6 @@ package femo.feature;
 
 public class FeatureValue <ValueType> {
 
-    //TODO: feature shouldn't actually be here, can be misleading if the value was normalized to a different type, keeping for debugging
     final protected Feature feature;
     final protected String name;
     final protected ValueType value;
@@ -43,4 +42,6 @@ public class FeatureValue <ValueType> {
     public ValueType getValue() {
         return value;
     }
+
+    public Feature getFeature() { return feature; }
 }

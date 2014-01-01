@@ -4,11 +4,11 @@ import femo.utils.EnumUtils;
 
 public abstract class EnumFeature<DataType, EnumType extends Enum> extends StringFeature<DataType> {
 
-    Class<EnumType> clazz;
+    Class<EnumType> enumTypeClass;
 
-    public EnumFeature(String name, Class<EnumType> clazz){
-        super(name, EnumUtils.getEnumValues(clazz), false);
-        this.clazz = clazz;
+    public EnumFeature(String name, Class<EnumType> enumTypeClass){
+        super(name, EnumUtils.getEnumValues(enumTypeClass), false);
+        this.enumTypeClass = enumTypeClass;
     }
 
     @Override
@@ -20,4 +20,8 @@ public abstract class EnumFeature<DataType, EnumType extends Enum> extends Strin
     }
 
     public abstract EnumType getEnumValue(DataType example) throws Exception;
+
+    public Class<EnumType> getEnumTypeClass() {
+        return enumTypeClass;
+    }
 }

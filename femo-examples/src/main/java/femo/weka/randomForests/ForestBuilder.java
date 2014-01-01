@@ -73,7 +73,7 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
             Attribute attribute = instances.attribute(featureValue.getName());
             if (featureValue.getValue() instanceof Double)
                 instance.setValue(attribute, (Double)featureValue.getValue());
-            else if (featureValue.getValue() instanceof String)
+            else if (featureValue.getFeature() instanceof StringFeature)
                 instance.setValue(attribute, (String)featureValue.getValue());
             else if(featureValue.getValue() != null)
                 System.out.println("Warning: could not assign attribute value for "+featureValue.getName());
@@ -97,7 +97,11 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
         for(TrainingExample example : examples){
             for(FeatureValue featureValue : example.getPredictorFeatureValues()){
                 if(!seenFeatureNames.contains(featureValue.getName())){
-                    Attribute attribute = new Attribute(featureValue.getName());
+                    Attribute attribute;
+                    if(featureValue.getFeature() instanceof StringFeature)
+                        attribute = new Attribute(featureValue.getName(), ((StringFeature)featureValue.getFeature()).getValidValues());
+                    else
+                        attribute = new Attribute(featureValue.getName());
                     attributes.add(attribute);
                     seenFeatureNames.add(featureValue.getName());
                 }
