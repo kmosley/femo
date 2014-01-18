@@ -16,15 +16,15 @@ import java.util.ArrayList;
  *
  * @param <DataType> the class of data object which the features can extract values from
  */
-public class ForestModel<DataType> extends Model<DataType, ForestPrediction> {
+public class ForestModel<DataType, PredictionType> extends Model<DataType, ForestPrediction<PredictionType>> {
     protected RandomForest forest;
-    protected ArrayList<String> classNameLookup;
+    protected ArrayList<PredictionType> classLookup;
     protected Instances instances;
 
-    public ForestModel(FeatureSet<DataType> featureSet, RandomForest forest, ArrayList<Attribute> attributes, Attribute classAttribute, ArrayList<String> classNameLookup){
+    public ForestModel(FeatureSet<DataType> featureSet, RandomForest forest, ArrayList<Attribute> attributes, Attribute classAttribute, ArrayList<PredictionType> classLookup){
         super(featureSet);
         this.forest = forest;
-        this.classNameLookup = classNameLookup;
+        this.classLookup = classLookup;
         // Weka is generally used to classify batches at a time so we need a new Instances if we are running one at a time
         // the Instance doesn't even need to get added to Instances, seems like a stupid design
         instances = new Instances("ExampleInstances", attributes, 0);
@@ -36,8 +36,9 @@ public class ForestModel<DataType> extends Model<DataType, ForestPrediction> {
         Example example = featureSet.getExample(dataObject, ExampleDensity.Sparse);
         Instance instance = ForestBuilder.createInstance(instances, example);
 
+        //double predictionConfidence =
         int predictedClassValue = (int)Math.round(forest.classifyInstance(instance));
 
-        return new ForestPrediction(classNameLookup.get(predictedClassValue));
+        return new ForestPrediction(classLookup.get(predictedClassValue));
     }
 }

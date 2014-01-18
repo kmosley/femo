@@ -27,7 +27,7 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
     protected int secondsToTrain = 30;
 
     @Override
-    public <DataType, ResponseDataType> NeuralNetClassificationModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception {
+    public <DataType, ResponseDataType, ResponseValueType> NeuralNetClassificationModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception {
 
         if(!(trainingSet.getResponseFeature() instanceof StringFeature)){
             throw new InvalidFeatureValueException("response feature for classification neural nets must return string values: "+trainingSet.getResponseFeature().getName());

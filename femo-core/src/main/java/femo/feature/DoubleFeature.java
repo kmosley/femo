@@ -1,8 +1,8 @@
 package femo.feature;
 
-public abstract class DoubleFeature <InputType> extends Feature<InputType> {
+public abstract class DoubleFeature <InputType> extends Feature<InputType, Double> {
     protected DoubleFeature(String name) {
-        super(name);
+        super(name, Double.class);
     }
 
     @Override

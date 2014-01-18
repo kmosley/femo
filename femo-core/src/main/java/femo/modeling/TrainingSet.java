@@ -15,15 +15,15 @@ import java.util.List;
  * @param <DataType> the class of data object which the features can extract values from
  * @param <ResponseDataType> the class of data object for the response feature to extract it's value from
  */
-public class TrainingSet <DataType, ResponseDataType> {
+public class TrainingSet <DataType, ResponseDataType, ResponseValueType> {
     protected final FeatureSet<DataType> featureSet;
     protected Iterator<DataType> dataObjectsIterator;
-    protected final Feature<ResponseDataType> responseFeature;
+    protected final Feature<ResponseDataType, ResponseValueType> responseFeature;
     protected Iterator<ResponseDataType> responseIterator;
 
     public TrainingSet(FeatureSet<DataType> featureSet,
                         Iterator<DataType> dataObjectsIterator,
-                        Feature<ResponseDataType> responseFeature,
+                        Feature<ResponseDataType, ResponseValueType> responseFeature,
                         Iterator<ResponseDataType> responseIterator){
         this.featureSet = featureSet;
         this.dataObjectsIterator = dataObjectsIterator;
@@ -61,7 +61,7 @@ public class TrainingSet <DataType, ResponseDataType> {
         return dataObjectsIterator;
     }
 
-    public Feature<ResponseDataType> getResponseFeature() {
+    public Feature<ResponseDataType, ResponseValueType> getResponseFeature() {
         return responseFeature;
     }
 

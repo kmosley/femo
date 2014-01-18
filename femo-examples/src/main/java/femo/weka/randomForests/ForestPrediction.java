@@ -2,8 +2,9 @@ package femo.weka.randomForests;
 
 import femo.prediction.Prediction;
 
-public class ForestPrediction extends Prediction<String> {
-    protected ForestPrediction(String s) {
-        super(s);
+public class ForestPrediction<PredictionType> extends Prediction<PredictionType> {
+
+    protected ForestPrediction(PredictionType predictionType) {
+        super(predictionType);
     }
 }

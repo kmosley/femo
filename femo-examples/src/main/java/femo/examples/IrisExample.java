@@ -3,6 +3,7 @@ package femo.examples;
 import femo.encog.neuralNets.NeuralNetBuilder;
 import femo.encog.neuralNets.NeuralNetClassificationModel;
 import femo.encog.neuralNets.NeuralNetHelper;
+import femo.exception.InvalidInputException;
 import femo.feature.*;
 import femo.modeling.Model;
 import femo.modeling.TrainingSet;
@@ -38,15 +39,23 @@ public class IrisExample {
         ArrayList<IrisData> train = datasets.get(0);
         ArrayList<IrisData> test = datasets.get(1);
 
-        // Create a WEKA random forest model
         FeatureSet<IrisData> featureSet = new FeatureSet<IrisData>(IrisFeatures.irisLengths);
-        TrainingSet<IrisData,IrisData> trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
 
-        ForestModel<IrisData> forestModel = new ForestBuilder()
+        // Create a WEKA random forest model with a String based response feature
+        TrainingSet<IrisData,IrisData,String> trainingSetString = new TrainingSet<IrisData,IrisData,String>(featureSet, train.iterator(), IrisFeatures.irisTypeString, train.iterator());
+        ForestModel<IrisData, String> forestModelString = new ForestBuilder()
                 .setNumSelectionAttributes(2)
                 .setNumTrees(100)
-                .buildModel(trainingSet);
-        testPredictions(forestModel, test, IrisFeatures.irisType);
+                .buildModel(trainingSetString);
+        testPredictions(forestModelString, test, IrisFeatures.irisTypeString);
+
+        // Create a WEKA random forest model with an Enum based response feature
+        TrainingSet<IrisData,IrisData,IrisType> trainingSetEnum = new TrainingSet<IrisData,IrisData,IrisType>(featureSet, train.iterator(), IrisFeatures.irisTypeEnum, train.iterator());
+        ForestModel<IrisData, IrisType> forestModelEnum = new ForestBuilder()
+                .setNumSelectionAttributes(2)
+                .setNumTrees(100)
+                .buildModel(trainingSetEnum);
+        testPredictions(forestModelEnum, test, IrisFeatures.irisTypeEnum);
 
         // Create an Encog neural network model
         NeuralNetBuilder builder = new NeuralNetBuilder()
@@ -54,18 +63,19 @@ public class IrisExample {
                 .setRandomSeed(1)
                 .setSecondsToTrain(2);
         // normalizing inputs to neural network helps it train faster
-        List<Feature<IrisData>> normalizedFeatures = NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator());
+        List<DoubleFeature<IrisData>> normalizedFeatures = NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator());
         featureSet = new FeatureSet<IrisData>(normalizedFeatures);
-        trainingSet = new TrainingSet<IrisData,IrisData>(featureSet, train.iterator(), IrisFeatures.irisType, train.iterator());
+        trainingSetString = new TrainingSet<IrisData,IrisData,String>(featureSet, train.iterator(), IrisFeatures.irisTypeString, train.iterator());
 
-        NeuralNetClassificationModel<IrisData> neuralNetModel = builder.buildModel(trainingSet);
-        testPredictions(neuralNetModel, test, IrisFeatures.irisType);
+        NeuralNetClassificationModel<IrisData> neuralNetModel = builder.buildModel(trainingSetString);
+        testPredictions(neuralNetModel, test, IrisFeatures.irisTypeString);
 
     }
 
     static class IrisFeatures{
         public static final ArrayList<DoubleFeature<IrisData>> irisLengths;
-        public static final StringFeature<IrisData> irisType;
+        public static final StringFeature<IrisData> irisTypeString;
+        public static final EnumFeature<IrisData, IrisType> irisTypeEnum;
 
         static{
             irisLengths = new ArrayList<DoubleFeature<IrisData>>();
@@ -79,13 +89,34 @@ public class IrisExample {
                 });
             }
 
-            irisType = new StringFeature<IrisData>("IrisType", new String[]{"Iris-setosa", "Iris-versicolor", "Iris-virginica"}, false) {
+            irisTypeString = new StringFeature<IrisData>("IrisTypeString", new String[]{"Iris-setosa", "Iris-versicolor", "Iris-virginica"}, false) {
                 @Override
                 protected String getStringValue(IrisData inputData) throws Exception {
                     return inputData.type;
                 }
             };
+
+            irisTypeEnum = new EnumFeature<IrisData, IrisType>("IrisTypeEnum", IrisType.class) {
+                @Override
+                public IrisType getEnumValue(IrisData inputData) throws Exception {
+                    switch (inputData.type){
+                        case "Iris-setosa":
+                            return IrisType.SETOSA;
+                        case "Iris-versicolor":
+                            return IrisType.VERSICOLOR;
+                        case "Iris-virginica":
+                            return IrisType.VIRGINICA;
+                    }
+                    throw new InvalidInputException("cannot convert string "+inputData.type+" to IrisType");
+                }
+            };
         }
+    }
+
+    enum IrisType {
+        SETOSA,
+        VERSICOLOR,
+        VIRGINICA
     }
 
     static class IrisData{
@@ -102,7 +133,7 @@ public class IrisExample {
     }
 
 
-    static void testPredictions(Model<IrisData, ? extends Prediction<String>> model, List<IrisData> test, StringFeature<IrisData> responseFeature) throws Exception {
+    static <ResponseValueType> void testPredictions(Model<IrisData, ? extends Prediction<ResponseValueType>> model, List<IrisData> test, Feature<IrisData, ResponseValueType> responseFeature) throws Exception {
         System.out.println("Testing: "+model.getClass());
         int wrong=0;
         int correct=0;
@@ -118,7 +149,7 @@ public class IrisExample {
         oos.writeObject(model);
         oos.close();
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream("irisModel.model"));
-        Model<IrisData, ? extends Prediction<String>> serializedModel = (Model<IrisData, ? extends Prediction<String>>)ois.readObject();
+        Model<IrisData, ? extends Prediction<ResponseValueType>> serializedModel = (Model<IrisData, ? extends Prediction<ResponseValueType>>)ois.readObject();
         ois.close();
         wrong=0;
         correct=0;

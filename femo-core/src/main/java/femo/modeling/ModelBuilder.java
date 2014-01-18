@@ -10,6 +10,6 @@ import java.util.Iterator;
 
 public interface ModelBuilder <ModelType extends IModel> {
 
-    public <DataType, ResponseDataType> IModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception;
+    public <DataType, ResponseDataType, ResponseValueType> IModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception;
 
 }

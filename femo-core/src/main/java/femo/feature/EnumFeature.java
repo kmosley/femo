@@ -2,26 +2,22 @@ package femo.feature;
 
 import femo.utils.EnumUtils;
 
-public abstract class EnumFeature<DataType, EnumType extends Enum> extends StringFeature<DataType> {
+import java.util.ArrayList;
+import java.util.Arrays;
 
-    Class<EnumType> enumTypeClass;
+public abstract class EnumFeature<DataType, EnumType extends Enum> extends Feature<DataType, EnumType> {
 
     public EnumFeature(String name, Class<EnumType> enumTypeClass){
-        super(name, EnumUtils.getEnumValues(enumTypeClass), false);
-        this.enumTypeClass = enumTypeClass;
+        super(name, enumTypeClass);
     }
 
     @Override
-    protected String getStringValue(DataType example) throws Exception {
-        EnumType enumVal = getEnumValue(example);
-        if (enumVal == null)
-            return null;
-        return enumVal.toString();
+    public FeatureValue<EnumType> getFeatureValue(DataType dataObject) throws Exception {
+        EnumType value = getEnumValue(dataObject);
+        return new FeatureValue<>(this, value);
     }
 
     public abstract EnumType getEnumValue(DataType example) throws Exception;
 
-    public Class<EnumType> getEnumTypeClass() {
-        return enumTypeClass;
-    }
+    public ArrayList<EnumType> getValidValues() { return new ArrayList<>(Arrays.asList(valueTypeClass.getEnumConstants())); }
 }

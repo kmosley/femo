@@ -9,13 +9,13 @@ import java.util.List;
 
 public class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializable {
 
-    protected final List<? extends Feature<DataType>> predictorFeatures;
+    protected final List<? extends Feature<DataType, ? extends Object>> predictorFeatures;
 
-    public FeatureSet(List<? extends Feature<DataType>> predictorFeatures){
+    public FeatureSet(List<? extends Feature<DataType, ? extends Object>> predictorFeatures){
         this.predictorFeatures = predictorFeatures;
     }
 
-    public FeatureSet(Feature<DataType> ... predictorFeatures){
+    public FeatureSet(Feature<DataType, ? extends Object> ... predictorFeatures){
         this.predictorFeatures = Arrays.asList(predictorFeatures);
     }
 
@@ -42,5 +42,9 @@ public class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializabl
                 example.add(featureValue);
         }
         return example;
+    }
+
+    public List<? extends Feature<DataType, ? extends Object>> getPredictorFeatures() {
+        return predictorFeatures;
     }
 }

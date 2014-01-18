@@ -1,9 +1,11 @@
 package femo.weka.randomForests;
 
+import femo.exception.FemoValidationException;
+import femo.exception.InvalidFeatureException;
 import femo.exception.InvalidFeatureValueException;
-import femo.feature.FeatureValue;
-import femo.feature.StringFeature;
+import femo.feature.*;
 import femo.modeling.*;
+import femo.utils.EnumUtils;
 import weka.classifiers.trees.RandomForest;
 import weka.core.*;
 import weka.core.Instance;
@@ -18,18 +20,19 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
     protected int numThreadsToUse = 4;
 
     @Override
-    public <DataType, ResponseDataType> ForestModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType> trainingSet) throws Exception {
+    public <DataType, ResponseDataType, ResponseValueType> ForestModel<DataType, ResponseValueType> buildModel(
+            TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception {
 
-        if(!(trainingSet.getResponseFeature() instanceof StringFeature)){
-            throw new InvalidFeatureValueException("response feature for trees must return string values: "+trainingSet.getResponseFeature().getName());
-        }
+        validateTrainingSet(trainingSet);
 
         List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
 
         ArrayList<Attribute> attributes = getPredictorAttributes(trainingExamples);
         Attribute classAttribute = new Attribute(
                 trainingSet.getResponseFeature().getName(),
-                ((StringFeature)trainingSet.getResponseFeature()).getValidValues());
+                trainingSet.getResponseFeature() instanceof StringFeature
+                        ? ((StringFeature)trainingSet.getResponseFeature()).getValidValues()
+                        : EnumUtils.getEnumValues(((EnumFeature)trainingSet.getResponseFeature()).getValueTypeClass()));
         attributes.add(classAttribute);
 
         Instances trainingInstances = createInstancesObject("TrainingInstances", trainingExamples, attributes, classAttribute);
@@ -46,9 +49,29 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
 
         forest.buildClassifier(trainingInstances);
 
-        ForestModel<DataType> model = new ForestModel<DataType>(trainingSet.getFeatureSet(), forest, attributes, classAttribute, new ArrayList<String>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
+        ForestModel<DataType, ResponseValueType> model;
+        if(trainingSet.getResponseFeature() instanceof StringFeature)
+            model = new ForestModel<>(trainingSet.getFeatureSet(), forest, attributes, classAttribute, new ArrayList<ResponseValueType>(((StringFeature)trainingSet.getResponseFeature()).getValidValues()));
+        else
+            model = new ForestModel<DataType, ResponseValueType>(trainingSet.getFeatureSet(), forest, attributes, classAttribute, ((EnumFeature)trainingSet.getResponseFeature()).getValidValues());
 
         return model;
+    }
+
+    protected <DataType, ResponseDataType, ResponseValueType> void validateTrainingSet(
+            TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws FemoValidationException{
+
+        if(!(trainingSet.getResponseFeature() instanceof StringFeature)
+                && !(trainingSet.getResponseFeature() instanceof EnumFeature)){
+            throw new InvalidFeatureValueException("response feature for trees must return string or enum values: "+trainingSet.getResponseFeature().getName());
+        }
+
+        for(Feature feature : trainingSet.getFeatureSet().getPredictorFeatures()){
+            if(!(feature instanceof DoubleFeature)
+                    && !(feature instanceof StringFeature)
+                    && !(feature instanceof EnumFeature))
+                throw new InvalidFeatureException("feature must be a Double, String, or Enum feature");
+        }
     }
 
     protected static Instances createInstancesObject(String name, List<TrainingExample> trainingExamples, ArrayList<Attribute> attributes, Attribute classAttribute) throws Exception {
@@ -71,10 +94,12 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
             if(featureValue.getValue() == null)
                 continue;
             Attribute attribute = instances.attribute(featureValue.getName());
-            if (featureValue.getValue() instanceof Double)
+            if (featureValue.getFeature() instanceof DoubleFeature)
                 instance.setValue(attribute, (Double)featureValue.getValue());
             else if (featureValue.getFeature() instanceof StringFeature)
                 instance.setValue(attribute, (String)featureValue.getValue());
+            else if (featureValue.getFeature() instanceof EnumFeature)
+                instance.setValue(attribute, featureValue.getValue().toString());
             else if(featureValue.getValue() != null)
                 System.out.println("Warning: could not assign attribute value for "+featureValue.getName());
         }
@@ -83,8 +108,7 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
 
     protected static Instance createInstance(Instances instances, TrainingExample example) throws InvalidFeatureValueException {
         Instance instance = createInstance(instances, (Example)example);
-        // string type already validated
-        instance.setClassValue((String) example.responseFeatureValue.getValue());
+        instance.setClassValue(example.responseFeatureValue.toString());
         return instance;
     }
 
@@ -100,6 +124,9 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
                     Attribute attribute;
                     if(featureValue.getFeature() instanceof StringFeature)
                         attribute = new Attribute(featureValue.getName(), ((StringFeature)featureValue.getFeature()).getValidValues());
+                    else if(featureValue.getFeature() instanceof EnumFeature)
+                        attribute = new Attribute(featureValue.getName(),
+                                EnumUtils.getEnumValues(featureValue.getFeature().getValueTypeClass()));
                     else
                         attribute = new Attribute(featureValue.getName());
                     attributes.add(attribute);

@@ -4,7 +4,7 @@ import femo.exception.InvalidDiscreteValueException;
 
 import java.util.*;
 
-public abstract class StringFeature <InputType> extends Feature<InputType> {
+public abstract class StringFeature <InputType> extends Feature<InputType, String> {
 
     Map<String, Integer> validValuesLookup;
     ArrayList<String> validValues;
@@ -14,7 +14,7 @@ public abstract class StringFeature <InputType> extends Feature<InputType> {
         this(name, new ArrayList<String>(), true);
     }
     public StringFeature(String name, ArrayList<String> validValues, boolean addValueIfNotPresent){
-        super(name);
+        super(name, String.class);
         this.validValues = validValues;
         this.validValuesLookup = new HashMap<String, Integer>(validValues.size());
         for(int i=0; i<validValues.size(); i++)

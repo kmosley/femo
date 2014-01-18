@@ -1,6 +1,6 @@
 package femo.exception;
 
-public class InvalidFeatureValueException extends FemoException {
+public class InvalidFeatureValueException extends FemoValidationException {
     public InvalidFeatureValueException(String message) {
         super(message);
     }

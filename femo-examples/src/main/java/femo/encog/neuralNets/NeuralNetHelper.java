@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class NeuralNetHelper {
-    public static <DataType> List<Feature<DataType>> normalizeFeatures(List<DoubleFeature<DataType>> features, FemoActivationFunction activationFunction, Iterator<DataType> dataIterator) throws Exception {
+    public static <DataType> List<DoubleFeature<DataType>> normalizeFeatures(List<DoubleFeature<DataType>> features, FemoActivationFunction activationFunction, Iterator<DataType> dataIterator) throws Exception {
         List<ClampedNormalizer> normalizers = new ArrayList<ClampedNormalizer>(features.size());
         double[] minValues = new double[features.size()];
         double[] maxValues = new double[features.size()];
@@ -30,7 +30,7 @@ public class NeuralNetHelper {
             }
         }
 
-        List<Feature<DataType>> normalizedFeatures = new ArrayList<Feature<DataType>>(features.size());
+        List<DoubleFeature<DataType>> normalizedFeatures = new ArrayList<DoubleFeature<DataType>>(features.size());
         for(int i=0; i<features.size(); i++){
             final DoubleFeature<DataType> feature = features.get(i);
             final ClampedNormalizer normalizer = new ClampedNormalizer(minValues[i], maxValues[i], activationFunction.min+.001, activationFunction.max-.001);
