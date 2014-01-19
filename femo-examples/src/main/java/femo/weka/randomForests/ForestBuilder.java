@@ -5,14 +5,17 @@ import femo.exception.InvalidFeatureException;
 import femo.exception.InvalidFeatureValueException;
 import femo.feature.*;
 import femo.modeling.*;
+import femo.prediction.Prediction;
 import femo.utils.EnumUtils;
+import femo.weka.common.FemoWekaUtils;
 import weka.classifiers.trees.RandomForest;
 import weka.core.*;
 import weka.core.Instance;
 
 import java.util.*;
 
-public class ForestBuilder implements ModelBuilder<ForestModel>{
+public class ForestBuilder<DataType, ResponseValueType>
+        implements ModelBuilder<DataType, ResponseValueType, ForestPrediction<ResponseValueType>, ForestModel<DataType, ResponseValueType>>{
 
     protected int randomSeed = new Random().nextInt();
     protected int numTrees = 50;
@@ -20,7 +23,7 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
     protected int numThreadsToUse = 4;
 
     @Override
-    public <DataType, ResponseDataType, ResponseValueType> ForestModel<DataType, ResponseValueType> buildModel(
+    public <ResponseDataType> ForestModel<DataType, ResponseValueType> buildModel(
             TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception {
 
         validateTrainingSet(trainingSet);
@@ -35,7 +38,7 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
                         : EnumUtils.getEnumValues(((EnumFeature)trainingSet.getResponseFeature()).getValueTypeClass()));
         attributes.add(classAttribute);
 
-        Instances trainingInstances = createInstancesObject("TrainingInstances", trainingExamples, attributes, classAttribute);
+        Instances trainingInstances = FemoWekaUtils.createInstancesObject("TrainingInstances", trainingExamples, attributes, classAttribute);
 
         // configure forest
         RandomForest forest = new RandomForest();
@@ -74,47 +77,10 @@ public class ForestBuilder implements ModelBuilder<ForestModel>{
         }
     }
 
-    protected static Instances createInstancesObject(String name, List<TrainingExample> trainingExamples, ArrayList<Attribute> attributes, Attribute classAttribute) throws Exception {
-        Instances instances = new Instances(name, attributes, trainingExamples.size());
-        instances.setClass(classAttribute);
-
-        for(TrainingExample example : trainingExamples){
-            Instance instance = createInstance(instances, example);
-            if(instance != null)
-                instances.add(instance);
-        }
-
-        return instances;
-    }
-
-    public static Instance createInstance(Instances instances, Example example) throws InvalidFeatureValueException {
-        Instance instance = new DenseInstance(instances.numAttributes());
-        instance.setDataset(instances);
-        for(FeatureValue featureValue : example.getPredictorFeatureValues()){
-            if(featureValue.getValue() == null)
-                continue;
-            Attribute attribute = instances.attribute(featureValue.getName());
-            if (featureValue.getFeature() instanceof DoubleFeature)
-                instance.setValue(attribute, (Double)featureValue.getValue());
-            else if (featureValue.getFeature() instanceof StringFeature)
-                instance.setValue(attribute, (String)featureValue.getValue());
-            else if (featureValue.getFeature() instanceof EnumFeature)
-                instance.setValue(attribute, featureValue.getValue().toString());
-            else if(featureValue.getValue() != null)
-                System.out.println("Warning: could not assign attribute value for "+featureValue.getName());
-        }
-        return instance;
-    }
-
-    protected static Instance createInstance(Instances instances, TrainingExample example) throws InvalidFeatureValueException {
-        Instance instance = createInstance(instances, (Example)example);
-        instance.setClassValue(example.responseFeatureValue.toString());
-        return instance;
-    }
-
     protected static ArrayList<Attribute> getPredictorAttributes(List<TrainingExample> examples){
         // initialize with first example's size even though that's not guaranteed to be max
         // it is guaranteed to be max if we are returning null feature values for all missing features
+        // this is just an allocation optimization
         ArrayList<Attribute> attributes = new ArrayList<Attribute>(examples.get(0).getPredictorFeatureValues().size());
         HashSet<String> seenFeatureNames = new HashSet<String>();
 

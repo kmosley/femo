@@ -1,10 +1,11 @@
-package femo.weka.randomForests;
+package femo.weka.linreg;
 
 import femo.feature.FeatureSet;
 import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 import femo.modeling.Model;
 import femo.weka.common.FemoWekaUtils;
+import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.Instance;
@@ -13,20 +14,18 @@ import weka.core.Instances;
 import java.util.ArrayList;
 
 /**
- * Model implementation for a WEKA Random Forest
+ * Model implementation for a WEKA Linear Regression
  *
  * @param <DataType> the class of data object which the features can extract values from
  */
-public class ForestModel<DataType, ResponseValueType> extends Model<DataType, ResponseValueType, ForestPrediction<ResponseValueType>> {
-    protected RandomForest forest;
-    protected ArrayList<ResponseValueType> classLookup;
+public class LinRegModel<DataType> extends Model<DataType, Double, LinRegPrediction> {
+    protected LinearRegression classifier;
     protected Instances instances;
 
-    public ForestModel(FeatureSet<DataType> featureSet, RandomForest forest, ArrayList<Attribute> attributes, Attribute classAttribute,
-                       ArrayList<ResponseValueType> classLookup){
+    public LinRegModel(FeatureSet<DataType> featureSet, LinearRegression classifier, ArrayList<Attribute> attributes,
+                       Attribute classAttribute){
         super(featureSet);
-        this.forest = forest;
-        this.classLookup = classLookup;
+        this.classifier = classifier;
         // Weka is generally used to classify batches at a time so we need a new Instances if we are running one at a time
         // the Instance doesn't even need to get added to Instances, seems like a stupid design
         instances = new Instances("ExampleInstances", attributes, 0);
@@ -34,12 +33,12 @@ public class ForestModel<DataType, ResponseValueType> extends Model<DataType, Re
     }
 
     @Override
-    public ForestPrediction getPrediction(DataType dataObject) throws Exception {
+    public LinRegPrediction getPrediction(DataType dataObject) throws Exception {
         Example example = featureSet.getExample(dataObject, ExampleDensity.Sparse);
         Instance instance = FemoWekaUtils.createInstance(instances, example);
 
-        int predictedClassValue = (int)Math.round(forest.classifyInstance(instance));
+        double predictedValue = classifier.classifyInstance(instance);
 
-        return new ForestPrediction(classLookup.get(predictedClassValue));
+        return new LinRegPrediction(predictedValue);
     }
 }

@@ -9,7 +9,7 @@ import org.encog.neural.networks.BasicNetwork;
 
 import java.util.ArrayList;
 
-public class NeuralNetClassificationModel<DataType> extends Model<DataType, NeuralNetClassificationPrediction> {
+public class NeuralNetClassificationModel<DataType> extends Model<DataType, String, NeuralNetClassificationPrediction> {
     protected BasicNetwork network;
     protected ArrayList<String> classNameLookup;
 

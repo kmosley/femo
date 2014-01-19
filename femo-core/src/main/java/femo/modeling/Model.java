@@ -13,7 +13,8 @@ import java.io.Serializable;
  * @param <DataType> the class of data object which the features can extract values from
  * @param <PredictionType> type of prediction this model should produce
  */
-public abstract class Model <DataType, PredictionType extends Prediction> implements IModel<DataType>, Serializable {
+public abstract class Model <DataType, ResponseValueType, PredictionType extends Prediction<ResponseValueType>>
+        implements IModel<DataType, ResponseValueType, PredictionType>, Serializable {
     public FeatureSet<DataType> featureSet;
 
     protected Model(FeatureSet<DataType> featureSet){

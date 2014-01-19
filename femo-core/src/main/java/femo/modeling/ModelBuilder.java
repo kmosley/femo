@@ -8,8 +8,9 @@ import femo.prediction.Prediction;
 
 import java.util.Iterator;
 
-public interface ModelBuilder <ModelType extends IModel> {
+public interface ModelBuilder <DataType, ResponseValueType, PredictionType extends Prediction<ResponseValueType>,
+        ModelType extends IModel<DataType, ResponseValueType, PredictionType>> {
 
-    public <DataType, ResponseDataType, ResponseValueType> IModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception;
+    public <ResponseDataType> ModelType buildModel(TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception;
 
 }

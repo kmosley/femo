@@ -9,8 +9,12 @@ import femo.modeling.Model;
 import femo.modeling.TrainingSet;
 import femo.prediction.Prediction;
 import femo.utils.ListUtils;
+import femo.weka.linreg.LinRegBuilder;
+import femo.weka.linreg.LinRegModel;
 import femo.weka.randomForests.ForestBuilder;
 import femo.weka.randomForests.ForestModel;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -47,7 +51,7 @@ public class IrisExample {
                 .setNumSelectionAttributes(2)
                 .setNumTrees(100)
                 .buildModel(trainingSetString);
-        testPredictions(forestModelString, test, IrisFeatures.irisTypeString);
+        testDiscretePredictions(forestModelString, test, IrisFeatures.irisTypeString);
 
         // Create a WEKA random forest model with an Enum based response feature
         TrainingSet<IrisData,IrisData,IrisType> trainingSetEnum = new TrainingSet<IrisData,IrisData,IrisType>(featureSet, train.iterator(), IrisFeatures.irisTypeEnum, train.iterator());
@@ -55,7 +59,14 @@ public class IrisExample {
                 .setNumSelectionAttributes(2)
                 .setNumTrees(100)
                 .buildModel(trainingSetEnum);
-        testPredictions(forestModelEnum, test, IrisFeatures.irisTypeEnum);
+        testDiscretePredictions(forestModelEnum, test, IrisFeatures.irisTypeEnum);
+
+        // Create a WEKA linear regression model
+        TrainingSet<IrisData,IrisData,Double> linRegTrainingSet = new TrainingSet<>(featureSet, train.iterator(), IrisFeatures.setosaScore,
+                train.iterator());
+        LinRegModel<IrisData> linRegModel = new LinRegBuilder()
+                .buildModel(linRegTrainingSet);
+        testRegressionPredictions(linRegModel, test, IrisFeatures.setosaScore);
 
         // Create an Encog neural network model
         NeuralNetBuilder builder = new NeuralNetBuilder()
@@ -68,7 +79,7 @@ public class IrisExample {
         trainingSetString = new TrainingSet<IrisData,IrisData,String>(featureSet, train.iterator(), IrisFeatures.irisTypeString, train.iterator());
 
         NeuralNetClassificationModel<IrisData> neuralNetModel = builder.buildModel(trainingSetString);
-        testPredictions(neuralNetModel, test, IrisFeatures.irisTypeString);
+        testDiscretePredictions(neuralNetModel, test, IrisFeatures.irisTypeString);
 
     }
 
@@ -76,6 +87,7 @@ public class IrisExample {
         public static final ArrayList<DoubleFeature<IrisData>> irisLengths;
         public static final StringFeature<IrisData> irisTypeString;
         public static final EnumFeature<IrisData, IrisType> irisTypeEnum;
+        public static final DoubleFeature<IrisData> setosaScore;
 
         static{
             irisLengths = new ArrayList<DoubleFeature<IrisData>>();
@@ -110,6 +122,15 @@ public class IrisExample {
                     throw new InvalidInputException("cannot convert string "+inputData.type+" to IrisType");
                 }
             };
+
+            setosaScore = new DoubleFeature<IrisData>("SetosaScore") {
+                @Override
+                public Double getDoubleValue(IrisData inputData) throws Exception {
+                    if(inputData.type.equals("Iris-setosa"))
+                        return 100d;
+                    return 0d;
+                }
+            };
         }
     }
 
@@ -132,9 +153,25 @@ public class IrisExample {
         }
     }
 
+    static <ResponseValueType> void testDiscretePredictions(Model<IrisData, ResponseValueType, ? extends Prediction<ResponseValueType>> model, List<IrisData> test,
+                                                            Feature<IrisData, ResponseValueType> responseFeature) throws Exception {
+        System.out.println("Testing "+model.getClass());
+        System.out.println("To Serialize: ");
+        testDiscretePredictionsInner(model, test, responseFeature);
+        System.out.println("Deserialized: ");
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("irisModel.model"));
+        oos.writeObject(model);
+        oos.close();
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("irisModel.model"));
+        Model<IrisData, ResponseValueType, ? extends Prediction<ResponseValueType>> deserializedModel
+                = (Model<IrisData, ResponseValueType, ? extends Prediction<ResponseValueType>>)ois.readObject();
+        ois.close();
+        testDiscretePredictionsInner(deserializedModel, test, responseFeature);
+    }
 
-    static <ResponseValueType> void testPredictions(Model<IrisData, ? extends Prediction<ResponseValueType>> model, List<IrisData> test, Feature<IrisData, ResponseValueType> responseFeature) throws Exception {
-        System.out.println("Testing: "+model.getClass());
+    static <ResponseValueType> void testDiscretePredictionsInner(Model<IrisData, ResponseValueType, ? extends Prediction<ResponseValueType>> model,
+                                                                 List<IrisData> test, Feature<IrisData, ResponseValueType> responseFeature)
+            throws Exception {
         int wrong=0;
         int correct=0;
         for(IrisData testData : test){
@@ -144,21 +181,37 @@ public class IrisExample {
                 wrong++;
         }
         System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
+    }
 
+    static void testRegressionPredictions(Model<IrisData, Double, ? extends Prediction<Double>> model, List<IrisData> test,
+                                                            Feature<IrisData, Double> responseFeature) throws Exception {
+        System.out.println("Testing "+model.getClass());
+        System.out.println("To Serialize: ");
+        testRegressionPredictionsInner(model, test, responseFeature);
+        System.out.println("Deserialized: ");
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("irisModel.model"));
         oos.writeObject(model);
         oos.close();
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream("irisModel.model"));
-        Model<IrisData, ? extends Prediction<ResponseValueType>> serializedModel = (Model<IrisData, ? extends Prediction<ResponseValueType>>)ois.readObject();
+        Model<IrisData, Double, ? extends Prediction<Double>> deserializedModel
+                = (Model<IrisData, Double, ? extends Prediction<Double>>)ois.readObject();
         ois.close();
-        wrong=0;
-        correct=0;
+        testRegressionPredictionsInner(deserializedModel, test, responseFeature);
+    }
+
+    static void testRegressionPredictionsInner(Model<IrisData, Double, ? extends Prediction<Double>> model, List<IrisData> test,
+                                               Feature<IrisData, Double> responseFeature) throws Exception {
+        SimpleRegression regression = new SimpleRegression();
+        SummaryStatistics summaryStatistics = new SummaryStatistics();
+
         for(IrisData testData : test){
-            if(serializedModel.getPrediction(testData).getValue().equals(responseFeature.getFeatureValue(testData).getValue()))
-                correct++;
-            else
-                wrong++;
+            double actual = responseFeature.getFeatureValue(testData).getValue();
+            double predicted = model.getPrediction(testData).getValue();
+            regression.addData(actual, predicted);
+            summaryStatistics.addValue(Math.abs(actual-predicted));
         }
-        System.out.println("correct = "+correct+" ("+(100*correct/((double)correct+wrong))+"%)");
+        System.out.println("RMS: "+Math.sqrt(regression.getMeanSquareError()));
+        System.out.println("Avg Abs Error: "+summaryStatistics.getMean());
+        System.out.println("Abs Error Std Dev: "+summaryStatistics.getStandardDeviation());
     }
 }

@@ -19,7 +19,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationModel> {
+public class NeuralNetBuilder<DataType>
+        implements ModelBuilder<DataType, String, NeuralNetClassificationPrediction, NeuralNetClassificationModel<DataType>> {
 
     protected int randomSeed = new Random().nextInt();
     protected int[] hiddenLayerCounts = new int[]{15, 5};
@@ -27,7 +28,7 @@ public class NeuralNetBuilder implements ModelBuilder<NeuralNetClassificationMod
     protected int secondsToTrain = 30;
 
     @Override
-    public <DataType, ResponseDataType, ResponseValueType> NeuralNetClassificationModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType, ResponseValueType> trainingSet) throws Exception {
+    public <ResponseDataType> NeuralNetClassificationModel<DataType> buildModel(TrainingSet<DataType, ResponseDataType, String> trainingSet) throws Exception {
 
         if(!(trainingSet.getResponseFeature() instanceof StringFeature)){
             throw new InvalidFeatureValueException("response feature for classification neural nets must return string values: "+trainingSet.getResponseFeature().getName());
