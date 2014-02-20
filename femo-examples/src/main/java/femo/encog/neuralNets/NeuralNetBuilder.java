@@ -34,7 +34,7 @@ public class NeuralNetBuilder<DataType>
             throw new InvalidFeatureValueException("response feature for classification neural nets must return string values: "+trainingSet.getResponseFeature().getName());
         }
 
-        List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Dense);
+        List<TrainingExample<String>> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Dense);
 
         BasicNetwork network = createNetwork(trainingExamples, (StringFeature)trainingSet.getResponseFeature());
         MLDataSet trainingDataSet = createMLDataSet(trainingExamples, trainingSet.getResponseFeature(), activationFunction);
@@ -70,7 +70,7 @@ public class NeuralNetBuilder<DataType>
         return model;
     }
 
-    protected <DataType, ResponseInput> BasicNetwork createNetwork(List<TrainingExample> trainingExamples, StringFeature responseFeature) throws Exception {
+    protected <DataType, ResponseInput> BasicNetwork createNetwork(List<TrainingExample<String>> trainingExamples, StringFeature responseFeature) throws Exception {
         final FeedForwardPattern pattern = new FeedForwardPattern();
         pattern.setInputNeurons((trainingExamples.get(0)).getPredictorFeatureValues().size());
         pattern.setOutputNeurons(responseFeature.getValidValues().size());
@@ -88,7 +88,7 @@ public class NeuralNetBuilder<DataType>
         return network;
     }
 
-    protected static <DataType, ResponseInput> MLDataSet createMLDataSet(List<TrainingExample> trainingExamples, Feature responseFeature, FemoActivationFunction activationFunction) throws Exception {
+    protected static <DataType, ResponseInput> MLDataSet createMLDataSet(List<TrainingExample<String>> trainingExamples, Feature responseFeature, FemoActivationFunction activationFunction) throws Exception {
         MLDataSet dataSet = new BasicMLDataSet();
         for(TrainingExample example : trainingExamples){
             MLData inputData = createMLData(example, activationFunction.mean);

@@ -8,9 +8,7 @@ import femo.modeling.*;
 import femo.utils.EnumUtils;
 import femo.weka.common.FemoWekaUtils;
 import weka.classifiers.functions.LinearRegression;
-import weka.classifiers.trees.RandomForest;
 import weka.core.*;
-import weka.core.Instance;
 
 import java.util.*;
 
@@ -25,7 +23,7 @@ public class LinRegBuilder<DataType>
 
         validateTrainingSet(trainingSet);
 
-        List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
+        List<TrainingExample<Double>> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
 
         ArrayList<Attribute> attributes = getPredictorAttributes(trainingExamples);
         Attribute classAttribute = new Attribute(trainingSet.getResponseFeature().getName());
@@ -62,7 +60,7 @@ public class LinRegBuilder<DataType>
         }
     }
 
-    protected static ArrayList<Attribute> getPredictorAttributes(List<TrainingExample> examples){
+    protected static ArrayList<Attribute> getPredictorAttributes(List<TrainingExample<Double>> examples){
         // initialize with first example's size even though that's not guaranteed to be max
         // it is guaranteed to be max if we are returning null feature values for all missing features
         // this is just an allocation optimization
@@ -102,5 +100,10 @@ public class LinRegBuilder<DataType>
         }
 
         return attributes;
+    }
+
+    public LinRegBuilder setShowDebugOutput(boolean showDebugOutput) {
+        this.showDebugOutput = showDebugOutput;
+        return this;
     }
 }

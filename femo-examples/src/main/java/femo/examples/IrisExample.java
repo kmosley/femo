@@ -5,6 +5,9 @@ import femo.encog.neuralNets.NeuralNetClassificationModel;
 import femo.encog.neuralNets.NeuralNetHelper;
 import femo.exception.InvalidInputException;
 import femo.feature.*;
+import femo.featureset.FeatureSet;
+import femo.liblinear.logreg.LogRegBuilder;
+import femo.liblinear.logreg.LogRegModel;
 import femo.modeling.Model;
 import femo.modeling.TrainingSet;
 import femo.prediction.Prediction;
@@ -68,13 +71,21 @@ public class IrisExample {
                 .buildModel(linRegTrainingSet);
         testRegressionPredictions(linRegModel, test, IrisFeatures.setosaScore);
 
+        // Create a LibLinear logistic regression model
+        TrainingSet<IrisData,IrisData,Double> logRegTrainingSet = new TrainingSet<>(featureSet, train.iterator(), IrisFeatures.setosaScore,
+                train.iterator());
+        LogRegModel<IrisData> logRegModel = new LogRegBuilder()
+                .buildModel(logRegTrainingSet);
+        testDiscretePredictions(logRegModel, test, IrisFeatures.setosaScore);
+
         // Create an Encog neural network model
         NeuralNetBuilder builder = new NeuralNetBuilder()
                 .setHiddenLayerCounts(new int[]{})
                 .setRandomSeed(1)
                 .setSecondsToTrain(2);
         // normalizing inputs to neural network helps it train faster
-        List<DoubleFeature<IrisData>> normalizedFeatures = NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator());
+        ArrayList<DoubleFeature<IrisData>> normalizedFeatures
+                = NeuralNetHelper.normalizeFeatures(IrisFeatures.irisLengths, builder.getActivationFunction(), train.iterator());
         featureSet = new FeatureSet<IrisData>(normalizedFeatures);
         trainingSetString = new TrainingSet<IrisData,IrisData,String>(featureSet, train.iterator(), IrisFeatures.irisTypeString, train.iterator());
 
@@ -127,7 +138,7 @@ public class IrisExample {
                 @Override
                 public Double getDoubleValue(IrisData inputData) throws Exception {
                     if(inputData.type.equals("Iris-setosa"))
-                        return 100d;
+                        return 1d;
                     return 0d;
                 }
             };
@@ -208,7 +219,7 @@ public class IrisExample {
             double actual = responseFeature.getFeatureValue(testData).getValue();
             double predicted = model.getPrediction(testData).getValue();
             regression.addData(actual, predicted);
-            summaryStatistics.addValue(Math.abs(actual-predicted));
+            summaryStatistics.addValue(Math.abs(actual - predicted));
         }
         System.out.println("RMS: "+Math.sqrt(regression.getMeanSquareError()));
         System.out.println("Avg Abs Error: "+summaryStatistics.getMean());

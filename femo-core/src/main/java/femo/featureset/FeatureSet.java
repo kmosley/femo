@@ -1,22 +1,25 @@
-package femo.feature;
+package femo.featureset;
 
+import femo.feature.Feature;
+import femo.feature.FeatureValue;
 import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializable {
 
-    protected final List<? extends Feature<DataType, ? extends Object>> predictorFeatures;
+    protected final ArrayList<? extends Feature<DataType, ? extends Object>> predictorFeatures;
 
-    public FeatureSet(List<? extends Feature<DataType, ? extends Object>> predictorFeatures){
+    public FeatureSet(ArrayList<? extends Feature<DataType, ? extends Object>> predictorFeatures){
         this.predictorFeatures = predictorFeatures;
     }
 
     public FeatureSet(Feature<DataType, ? extends Object> ... predictorFeatures){
-        this.predictorFeatures = Arrays.asList(predictorFeatures);
+        this.predictorFeatures = new ArrayList<>(Arrays.asList(predictorFeatures));
     }
 
     @Override
@@ -44,7 +47,7 @@ public class FeatureSet <DataType> implements IFeatureSet<DataType>, Serializabl
         return example;
     }
 
-    public List<? extends Feature<DataType, ? extends Object>> getPredictorFeatures() {
+    public ArrayList<? extends Feature<DataType, ? extends Object>> getPredictorFeatures() {
         return predictorFeatures;
     }
 }

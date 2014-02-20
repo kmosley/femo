@@ -3,13 +3,11 @@ package femo.modeling;
 import femo.exception.InvalidFeatureValueException;
 import femo.feature.FeatureValue;
 
-import java.util.HashMap;
-
 //TODO: maybe use composition instead of inheritance here
-public class TrainingExample extends Example {
-    public FeatureValue responseFeatureValue;
+public class TrainingExample<ResponseValueType> extends Example {
+    public FeatureValue<ResponseValueType> responseFeatureValue;
 
-    public TrainingExample(Example example, FeatureValue responseFeatureValue) throws InvalidFeatureValueException {
+    public TrainingExample(Example example, FeatureValue<ResponseValueType> responseFeatureValue) throws InvalidFeatureValueException {
         this.predictorFeatureValues = example.predictorFeatureValues;
         this.valueLookup = example.valueLookup;
         this.responseFeatureValue = responseFeatureValue;

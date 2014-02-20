@@ -17,8 +17,8 @@ import java.util.List;
 
 public class FemoWekaUtils {
 
-    public static Instances createInstancesObject(String name, List<TrainingExample> trainingExamples, ArrayList<Attribute> attributes,
-                                                  Attribute classAttribute) throws Exception {
+    public static <ResponseValueType> Instances createInstancesObject(String name, List<TrainingExample<ResponseValueType>> trainingExamples,
+                                                  ArrayList<Attribute> attributes, Attribute classAttribute) throws Exception {
         Instances instances = new Instances(name, attributes, trainingExamples.size());
         instances.setClass(classAttribute);
 

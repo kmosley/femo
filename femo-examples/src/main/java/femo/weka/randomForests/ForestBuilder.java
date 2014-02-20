@@ -28,7 +28,7 @@ public class ForestBuilder<DataType, ResponseValueType>
 
         validateTrainingSet(trainingSet);
 
-        List<TrainingExample> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
+        List<TrainingExample<ResponseValueType>> trainingExamples = trainingSet.generateAllExamples(ExampleDensity.Sparse);
 
         ArrayList<Attribute> attributes = getPredictorAttributes(trainingExamples);
         Attribute classAttribute = new Attribute(
@@ -77,7 +77,7 @@ public class ForestBuilder<DataType, ResponseValueType>
         }
     }
 
-    protected static ArrayList<Attribute> getPredictorAttributes(List<TrainingExample> examples){
+    protected static <ResponseValueType> ArrayList<Attribute> getPredictorAttributes(List<TrainingExample<ResponseValueType>> examples){
         // initialize with first example's size even though that's not guaranteed to be max
         // it is guaranteed to be max if we are returning null feature values for all missing features
         // this is just an allocation optimization

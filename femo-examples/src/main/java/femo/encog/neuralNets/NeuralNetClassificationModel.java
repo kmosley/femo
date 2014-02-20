@@ -1,6 +1,6 @@
 package femo.encog.neuralNets;
 
-import femo.feature.FeatureSet;
+import femo.featureset.FeatureSet;
 import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 import femo.modeling.Model;

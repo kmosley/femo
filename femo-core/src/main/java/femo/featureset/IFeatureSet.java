@@ -1,4 +1,4 @@
-package femo.feature;
+package femo.featureset;
 
 import femo.modeling.Example;
 import femo.modeling.ExampleDensity;

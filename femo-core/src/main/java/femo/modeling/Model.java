@@ -1,6 +1,6 @@
 package femo.modeling;
 
-import femo.feature.FeatureSet;
+import femo.featureset.FeatureSet;
 import femo.prediction.Prediction;
 
 import java.io.Serializable;

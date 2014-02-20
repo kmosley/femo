@@ -1,12 +1,11 @@
 package femo.weka.linreg;
 
-import femo.feature.FeatureSet;
+import femo.featureset.FeatureSet;
 import femo.modeling.Example;
 import femo.modeling.ExampleDensity;
 import femo.modeling.Model;
 import femo.weka.common.FemoWekaUtils;
 import weka.classifiers.functions.LinearRegression;
-import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;

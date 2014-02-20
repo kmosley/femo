@@ -1,7 +1,7 @@
 package femo.modeling;
 
 import femo.feature.Feature;
-import femo.feature.FeatureSet;
+import femo.featureset.FeatureSet;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,8 +38,8 @@ public class TrainingSet <DataType, ResponseDataType, ResponseValueType> {
         return null;
     }
 
-    public List<TrainingExample> generateAllExamples(ExampleDensity density) throws Exception {
-        List<TrainingExample> examples = new ArrayList<TrainingExample>();
+    public List<TrainingExample<ResponseValueType>> generateAllExamples(ExampleDensity density) throws Exception {
+        List<TrainingExample<ResponseValueType>> examples = new ArrayList<TrainingExample<ResponseValueType>>();
         TrainingExample example = generateNextTrainingExample(density);
         while(example != null){
             examples.add(example);
